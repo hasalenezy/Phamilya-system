@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة الصيدلية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0f1e; --surface:#111827; --surface2:#1a2235; --border:#1e2d45;
+  --accent:#00d4aa; --accent2:#0099ff; --warn:#f59e0b; --danger:#ef4444;
+  --text:#e2e8f0; --text-muted:#64748b; --success:#10b981;
+  --admin:#7c3aed; --pharmacy:#0099ff; --warehouse:#f59e0b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 30% 30%,#00d4aa0f,transparent 60%),radial-gradient(ellipse at 70% 70%,#0099ff08,transparent 60%);}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:90%;max-width:420px;animation:fadeUp 0.4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo .icon{font-size:48px;display:block;margin-bottom:8px;}
+.auth-logo h1{font-size:22px;font-weight:900;}
+.auth-logo h1 span{color:var(--accent);}
+.auth-logo p{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.auth-field{margin-bottom:16px;}
+.auth-field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
+.auth-field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+.auth-field input:focus{border-color:var(--accent);}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;padding:13px;color:#000;font-family:'Cairo',sans-serif;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;}
+.auth-err{background:#ef444420;border:1px solid #ef444440;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--danger);margin-top:12px;display:none;}
+
+/* APP */
+.app{display:none;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.header-title{font-size:16px;font-weight:700;}
+.header-title span{color:var(--accent);}
+.header-sub{font-size:11px;color:var(--text-muted);}
+.user-badge{display:flex;align-items:center;gap:8px;}
+.role-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.role-admin{background:#7c3aed20;color:#a78bfa;}
+.role-pharmacy{background:#0099ff20;color:#60a5fa;}
+.role-warehouse{background:#f59e0b20;color:#fbbf24;}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;}
+.btn-logout:hover{color:var(--danger);border-color:var(--danger);}
+
+/* NOTIFICATION BELL */
+.notif-wrap{position:relative;cursor:pointer;}
+.notif-bell{font-size:20px;padding:4px;}
+.notif-count{position:absolute;top:-4px;left:-4px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none;}
+.notif-count.show{display:flex;}
+.notif-dropdown{position:absolute;top:110%;left:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;width:300px;max-height:350px;overflow-y:auto;z-index:200;display:none;box-shadow:0 8px 24px #00000060;}
+.notif-dropdown.show{display:block;}
+.notif-header{padding:12px 16px;font-weight:700;font-size:13px;border-bottom:1px solid var(--border);color:var(--accent);}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.notif-item:hover{background:var(--surface2);}
+.notif-item.unread{background:#00d4aa08;}
+.notif-title{font-size:13px;font-weight:600;}
+.notif-time{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.notif-empty{padding:24px;text-align:center;color:var(--text-muted);font-size:13px;}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:20px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;}
+.tab-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 18px;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;font-weight:600;transition:all 0.2s;}
+.tab-btn.active{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
+.stat-card .num{font-size:28px;font-weight:900;}
+.stat-card .lbl{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--accent);display:flex;align-items:center;gap:8px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:600;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field select option{background:var(--surface);}
+.field textarea{resize:vertical;min-height:70px;}
+
+/* BUTTONS */
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:9px 20px;color:#000;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;cursor:pointer;}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 20px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;}
+.btn-danger{background:#ef444420;border:1px solid #ef444440;border-radius:8px;padding:5px 10px;color:var(--danger);font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer;}
+.btn-success{background:#10b98120;border:1px solid #10b98140;border-radius:8px;padding:5px 10px;color:var(--success);font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer;}
+.btn-warn{background:#f59e0b20;border:1px solid #f59e0b40;border-radius:8px;padding:5px 10px;color:var(--warn);font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer;}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--surface2);border-bottom:1px solid var(--border);}
+th{padding:11px 14px;text-align:right;font-size:11px;color:var(--text-muted);font-weight:600;}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--surface2);}
+td{padding:11px 14px;font-size:13px;}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-pending{background:#f59e0b18;color:var(--warn);}
+.badge-approved{background:#10b98118;color:var(--success);}
+.badge-rejected{background:#ef444418;color:var(--danger);}
+.badge-delivered{background:#0099ff18;color:var(--accent2);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:40px;color:var(--text-muted);}
+.empty-state .icon{font-size:36px;opacity:0.4;margin-bottom:8px;}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:#00000085;z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp 0.2s ease;}
+.modal h3{font-size:16px;margin-bottom:18px;color:var(--accent2);}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 24px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 24px #00000060;transition:opacity 0.3s;pointer-events:none;opacity:0;}
+
+/* USER MGMT */
+.user-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.user-info .name{font-weight:700;font-size:14px;}
+.user-info .email{font-size:12px;color:var(--text-muted);}
+
+/* REQUEST CARD */
+.request-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.request-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.request-drug{font-weight:700;font-size:15px;}
+.request-meta{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.request-actions{display:flex;gap:6px;margin-top:10px;}
+
+@media(max-width:700px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .main{padding:14px;}
+  .tabs{gap:4px;}
+  .tab-btn{padding:7px 12px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <span class="icon">💊</span>
+      <h1>نظام <span>الصيدلية</span></h1>
+      <p>إدارة الطلبات والمخزون</p>
+    </div>
+    <div class="auth-field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="login-email" placeholder="example@email.com">
+    </div>
+    <div class="auth-field">
+      <label>كلمة المرور</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="auth-btn" onclick="login()">تسجيل الدخول</button>
+    <div class="auth-err" id="auth-err"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app">
+  <header>
+    <div class="header-left">
+      <div class="logo">💊</div>
+      <div>
+        <div class="header-title">نظام <span>الصيدلية</span></div>
+        <div class="header-sub" id="header-sub">جاري التحميل...</div>
+      </div>
+    </div>
+    <div class="user-badge">
+      <div class="notif-wrap" onclick="toggleNotif()">
+        <div class="notif-bell">🔔</div>
+        <div class="notif-count" id="notif-count">0</div>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header">الإشعارات</div>
+          <div id="notif-list"><div class="notif-empty">لا توجد إشعارات</div></div>
+        </div>
+      </div>
+      <span class="role-badge" id="role-badge"></span>
+      <button class="btn-logout" onclick="logout()">خروج</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="tabs" id="main-tabs"></div>
+
+    <!-- ADMIN TABS -->
+    <div class="tab-content" id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num" style="color:var(--accent2)" id="stat-total-req">0</div><div class="lbl">إجمالي الطلبات</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--warn)" id="stat-pending">0</div><div class="lbl">قيد الانتظار</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--success)" id="stat-approved">0</div><div class="lbl">تمت الموافقة</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent)" id="stat-delivered">0</div><div class="lbl">تم التسليم</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 آخر الطلبات</div>
+        <div id="admin-requests-list"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-users">
+      <div class="card">
+        <div class="card-title">👥 إدارة المستخدمين</div>
+        <button class="btn-primary" onclick="openAddUser()" style="margin-bottom:16px">➕ إضافة مستخدم</button>
+        <div id="users-list"></div>
+      </div>
+    </div>
+
+    <!-- PHARMACY TAB -->
+    <div class="tab-content" id="tab-new-request">
+      <div class="card">
+        <div class="card-title">📝 طلب دواء جديد</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>اسم الدواء</label>
+            <input type="text" id="req-drug" placeholder="اسم الدواء">
+          </div>
+          <div class="field">
+            <label>الكمية المطلوبة</label>
+            <input type="number" id="req-qty" min="1" placeholder="0">
+          </div>
+          <div class="field">
+            <label>الأولوية</label>
+            <select id="req-priority">
+              <option value="normal">عادي</option>
+              <option value="urgent">عاجل 🚨</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>ملاحظات</label>
+          <textarea id="req-note" placeholder="أي تفاصيل إضافية..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="submitRequest()">إرسال الطلب</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 طلباتي</div>
+        <div id="my-requests-list"></div>
+      </div>
+    </div>
+
+    <!-- WAREHOUSE TAB -->
+    <div class="tab-content" id="tab-warehouse">
+      <div class="card">
+        <div class="card-title">📦 الطلبات الواردة</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="tab-btn active" onclick="filterWarehouse('all',this)">الكل</button>
+          <button class="tab-btn" onclick="filterWarehouse('pending',this)">⏳ قيد الانتظار</button>
+          <button class="tab-btn" onclick="filterWarehouse('approved',this)">✅ موافق عليها</button>
+          <button class="tab-btn" onclick="filterWarehouse('delivered',this)">📦 مُسلَّمة</button>
+        </div>
+        <div id="warehouse-requests-list"></div>
+      </div>
+    </div>
+
+    <!-- ALL REQUESTS (ADMIN) -->
+    <div class="tab-content" id="tab-all-requests">
+      <div class="card">
+        <div class="card-title">📋 كل الطلبات</div>
+        <div id="all-requests-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-bg" id="add-user-modal">
+  <div class="modal">
+    <h3>➕ إضافة مستخدم جديد</h3>
+    <div class="field" style="margin-bottom:12px">
+      <label>الاسم</label>
+      <input type="text" id="new-name" class="mfs" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="new-email" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>كلمة المرور</label>
+      <input type="password" id="new-pass" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>الدور</label>
+      <select id="new-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+        <option value="pharmacy">مشرف صيدلية</option>
+        <option value="warehouse">موظف مستودع</option>
+        <option value="admin">أدمن</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>اسم الصيدلية / القسم</label>
+      <input type="text" id="new-dept" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;" placeholder="مثال: صيدلية الطوارئ">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="addUser()">إضافة</button>
+      <button class="btn-secondary" onclick="closeModal('add-user-modal')">إلغاء</button>
+    </div>
+    <div class="auth-err" id="add-user-err"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAAfw89A0uXaCnI23ltXBwaZzInldsrmJI",
+  authDomain: "phamilya-system.firebaseapp.com",
+  databaseURL: "https://phamilya-system-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "phamilya-system",
+  storageBucket: "phamilya-system.firebasestorage.app",
+  messagingSenderId: "880532245730",
+  appId: "1:880532245730:web:82f0b388cab7fba4ed62bb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentUserData = null;
+let warehouseFilter = 'all';
+let unsubRequests = null;
+let unsubNotifs = null;
+
+// ── TOAST ──
+function showMsg(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => t.style.opacity = '0', 3000);
+}
+window.showMsg = showMsg;
+
+// ── AUTH ──
+window.login = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('auth-err');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'يرجى إدخال البريد وكلمة المرور'; err.style.display = 'block'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    err.textContent = 'بريد أو كلمة مرور غير صحيحة';
+    err.style.display = 'block';
+  }
+}
+
+window.logout = async function() {
+  if (unsubRequests) unsubRequests();
+  if (unsubNotifs) unsubNotifs();
+  await signOut(auth);
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    const snap = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
+    if (!snap.empty) {
+      currentUserData = snap.docs[0].data();
+      initApp();
+    } else {
+      // First time admin setup
+      currentUserData = { name: 'Admin', role: 'admin', dept: 'الإدارة', uid: user.uid, email: user.email };
+      await setDoc(doc(db, 'users', user.uid), currentUserData);
+      initApp();
+    }
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+function initApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const roleLabels = { admin: 'أدمن', pharmacy: 'مشرف صيدلية', warehouse: 'موظف مستودع' };
+  const roleClasses = { admin: 'role-admin', pharmacy: 'role-pharmacy', warehouse: 'role-warehouse' };
+
+  document.getElementById('header-sub').textContent = ${currentUserData.name} — ${currentUserData.dept || ''};
+  const rb = document.getElementById('role-badge');
+  rb.textContent = roleLabels[currentUserData.role] || currentUserData.role;
+  rb.className = 'role-badge ' + (roleClasses[currentUserData.role] || '');
+
+  buildTabs();
+  loadNotifications();
+}
+
+function buildTabs() {
+  const tabs = document.getElementById('main-tabs');
+  tabs.innerHTML = '';
+  const role = currentUserData.role;
+
+  const adminTabs = [
+    { id: 'dashboard', label: '📊 الداشبورد', fn: loadDashboard },
+    { id: 'all-requests', label: '📋 كل الطلبات', fn: loadAllRequests },
+    { id: 'users', label: '👥 المستخدمون', fn: loadUsers },
+  ];
+  const pharmacyTabs = [
+    { id: 'new-request', label: '📝 طلب جديد', fn: loadMyRequests },
+  ];
+  const warehouseTabs = [
+    { id: 'warehouse', label: '📦 الطلبات الواردة', fn: () => loadWarehouseRequests(warehouseFilter) },
+  ];
+
+  let tabList = role === 'admin' ? adminTabs : role === 'pharmacy' ? pharmacyTabs : warehouseTabs;
+
+  tabList.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + t.id).classList.add('active');
+      t.fn();
+    };
+    tabs.appendChild(btn);
+    if (i === 0) {
+      document.getElementById('tab-' + t.id).classList.add('active');
+      t.fn();
+    }
+  });
+}
+
+// ── NOTIFICATIONS ──
+function loadNotifications() {
+  const q = query(collection(db, 'notifications'),
+    where('toUid', '==', currentUser.uid),
+    orderBy('createdAt', 'desc'));
+
+  unsubNotifs = onSnapshot(q, snap => {
+    const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const unread = notifs.filter(n => !n.read);
+    const cnt = document.getElementById('notif-count');
+    if (unread.length > 0) { cnt.textContent = unread.length; cnt.classList.add('show'); }
+    else cnt.classList.remove('show');
+
+    const list = document.getElementById('notif-list');
+    if (!notifs.length) { list.innerHTML = '<div class="notif-empty">لا توجد إشعارات</div>'; return; }
+    list.innerHTML = notifs.slice(0, 10).map(n => `
+      <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markRead('${n.id}')">
+        <div class="notif-title">${n.message}</div>
+        <div class="notif-time">${n.createdAt ? new Date(n.createdAt.seconds * 1000).toLocaleString('ar-SA') : ''}</div>
+      </div>`).join('');
+  });
+}
+
+window.markRead = async function(id) {
+  await updateDoc(doc(db, 'notifications', id), { read: true });
+  document.getElementById('notif-dropdown').classList.remove('show');
+}
+
+window.toggleNotif = function() {
+  document.getElementById('notif-dropdown').classList.toggle('show');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.notif-wrap'))
+    document.getElementById('notif-dropdown').classList.remove('show');
+});
+
+async function sendNotification(toUid, message) {
+  await addDoc(collection(db, 'notifications'), {
+    toUid, message, read: false, createdAt: serverTimestamp()
+  });
+}
+
+// ── REQUESTS ──
+window.submitRequest = async function() {
+  const drug = document.getElementById('req-drug').value.trim();
+  const qty = +document.getElementById('req-qty').value;
+  const priority = document.getElementById('req-priority').value;
+  const note = document.getElementById('req-note').value.trim();
+  if (!drug) { showMsg('⚠️ أدخل اسم الدواء'); return; }
+  if (!qty || qty <= 0) { showMsg('⚠️ أدخل الكمية'); return; }
+
+  await addDoc(collection(db, 'requests'), {
+    drug, qty, priority, note,
+    status: 'pending',
+    fromUid: currentUser.uid,
+    fromName: currentUserData.name,
+    fromDept: currentUserData.dept || '',
+    createdAt: serverTimestamp()
+  });
+
+  // notify all warehouse staff
+  const warehouseUsers = await getDocs(query(collection(db, 'users'), where('role', '==', 'warehouse')));
+  for (const u of warehouseUsers.docs) {
+    await sendNotification(u.data().uid, طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name});
+  }
+  // notify admins
+  const admins = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin')));
+  for (const u of admins.docs) {
+    await sendNotification(u.data().uid, طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name});
+  }
+
+  document.getElementById('req-drug').value = '';
+  document.getElementById('req-qty').value = '';
+  document.getElementById('req-note').value = '';
+  showMsg('✅ تم إرسال الطلب');
+  loadMyRequests();
+}
+
+async function loadMyRequests() {
+  const q = query(collection(db, 'requests'), where('fromUid', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  const list = document.getElementById('my-requests-list');
+  if (snap.empty) { list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>لا توجد طلبات بعد</p></div>'; return; }
+  list.innerHTML = snap.docs.map(d => {
+    const r = d.data();
+    return requestCard(d.id, r, 'pharmacy');
+  }).join('');
+}
+
+async function loadWarehouseRequests(filter = 'all') {
+  warehouseFilter = filter;
+  let q;
+  if (filter === 'all') q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+  else q = query(collection(db, 'requests'), where('status', '==', filter), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  const list = document.getElementById('warehouse-requests-list');
+  if (snap.empty) { list.innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>لا توجد طلبات</p></div>'; return; }
+  list.innerHTML = snap.docs.map(d => requestCard(d.id, d.data(), 'warehouse')).join('');
+}
+
+async function loadAllRequests() {
+  const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  const list = document.getElementById('all-requests-list');
+  if (snap.empty) { list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>لا توجد طلبات</p></div>'; return; }
+  list.innerHTML = snap.docs.map(d => requestCard(d.id, d.data(), 'admin')).join('');
+}
+
+async function loadDashboard() {
+  const snap = await getDocs(collection(db, 'requests'));
+  const all = snap.docs.map(d => d.data());
+  document.getElementById('stat-total-req').textContent = all.length;
+  document.getElementById('stat-pending').textContent = all.filter(r => r.status === 'pending').length;
+  document.getElementById('stat-approved').textContent = all.filter(r => r.status === 'approved').length;
+  document.getElementById('stat-delivered').textContent = all.filter(r => r.status === 'delivered').length;
+
+  const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+  const recent = await getDocs(q);
+  const list = document.getElementById('admin-requests-list');
+  if (recent.empty) { list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>لا توجد طلبات</p></div>'; return; }
+  list.innerHTML = recent.docs.slice(0, 10).map(d => requestCard(d.id, d.data(), 'admin')).join('');
+}
+
+function requestCard(id, r, viewAs) {
+  const statusLabels = { pending: '⏳ قيد الانتظار', approved: '✅ موافق عليه', rejected: '❌ مرفوض', delivered: '📦 تم التسليم' };
+  const statusClasses = { pending: 'badge-pending', approved: 'badge-approved', rejected: 'badge-rejected', delivered: 'badge-delivered' };
+  const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString('ar-SA') : '';
+  const priority = r.priority === 'urgent' ? '<span style="color:var(--danger);font-size:11px;font-weight:700">🚨 عاجل</span>' : '';
+
+  let actions = '';
+  if (viewAs === 'warehouse' && r.status === 'pending') {
+    actions = `<div class="request-actions">
+      <button class="btn-success" onclick="updateRequest('${id}','approved','${r.fromUid}','${r.drug}')">✅ موافقة</button>
+      <button class="btn-danger" onclick="updateRequest('${id}','rejected','${r.fromUid}','${r.drug}')">❌ رفض</button>
+    </div>`;
+  } else if (viewAs === 'warehouse' && r.status === 'approved') {
+    actions = `<div class="request-actions">
+      <button class="btn-warn" onclick="updateRequest('${id}','delivered','${r.fromUid}','${r.drug}')">📦 تم التسليم</button>
+    </div>`;
+  }
+
+  return `<div class="request-card">
+    <div class="request-header">
+      <div>
+        <div class="request-drug">${r.drug} ${priority}</div>
+        <div class="request-meta">الكمية: ${r.qty} | من: ${r.fromDept || r.fromName} | ${date}</div>
+        ${r.note ? <div class="request-meta" style="margin-top:4px">📝 ${r.note}</div> : ''}
+      </div>
+      <span class="badge ${statusClasses[r.status] || ''}">${statusLabels[r.status] || r.status}</span>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+window.updateRequest = async function(id, status, fromUid, drug) {
+  await updateDoc(doc(db, 'requests', id), { status, updatedAt: serverTimestamp() });
+  const msgs = {
+    approved: ✅ تمت الموافقة على طلب: ${drug},
+    rejected: ❌ تم رفض طلب: ${drug},
+    delivered: 📦 تم تسليم: ${drug}
+  };
+  await sendNotification(fromUid, msgs[status]);
+  showMsg('✅ تم تحديث الطلب');
+  loadWarehouseRequests(warehouseFilter);
+}
+
+window.filterWarehouse = function(filter, btn) {
+  document.querySelectorAll('#tab-warehouse .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadWarehouseRequests(filter);
+}
+
+// ── USERS ──
+async function loadUsers() {
+  const snap = await getDocs(collection(db, 'users'));
+  const list = document.getElementById('users-list');
+  if (snap.empty) { list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>لا يوجد مستخدمون</p></div>'; return; }
+  const roleLabels = { admin: '👑 أدمن', pharmacy: '🏥 مشرف صيدلية', warehouse: '🏭 موظف مستودع' };
+  list.innerHTML = snap.docs.map(d => {
+    const u = d.data();
+    return `<div class="user-card">
+      <div class="user-info">
+        <div class="name">${u.name} <span style="font-size:11px;color:var(--text-muted)">${u.dept || ''}</span></div>
+        <div class="email">${u.email}</div>
+      </div>
+      <span class="badge badge-approved">${roleLabels[u.role] || u.role}</span>
+    </div>`;
+  }).join('');
+}
+
+window.openAddUser = function() {
+  document.getElementById('add-user-modal').classList.add('show');
+  document.getElementById('add-user-err').style.display = 'none';
+}
+
+window.addUser = async function() {
+  const name = document.getElementById('new-name').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  const pass = document.getElementById('new-pass').value;
+  const role = document.getElementById('new-role').value;
+  const dept = document.getElementById('new-dept').value.trim();
+  const err = document.getElementById('add-user-err');
+  err.style.display = 'none';
+
+  if (!name || !email || !pass) { err.textContent = 'يرجى تعبئة كل الحقول'; err.style.display = 'block'; return; }
+
+  try {
+    // Create second auth instance to avoid logging out current admin
+    const secondApp = initializeApp(firebaseConfig, 'secondary');
+    const secondAuth = getAuth(secondApp);
+    const cred = await createUserWithEmailAndPassword(secondAuth, email, pass);
+    const uid = cred.user.uid;
+    await signOut(secondAuth);
+
+    await setDoc(doc(db, 'users', uid), { name, email, role, dept, uid });
+    showMsg('✅ تم إضافة المستخدم');
+    closeModal('add-user-modal');
+    loadUsers();
+  } catch(e) {
+    err.textContent = e.code === 'auth/email-already-in-use' ? 'البريد مستخدم مسبقاً' : 'حدث خطأ: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+document.getElementById('add-user-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('add-user-modal');
+});
+</script>
+</body>
+</html>
