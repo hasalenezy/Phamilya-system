@@ -401,7 +401,7 @@ function initApp() {
   const roleLabels = { admin: 'أدمن', pharmacy: 'مشرف صيدلية', warehouse: 'موظف مستودع' };
   const roleClasses = { admin: 'role-admin', pharmacy: 'role-pharmacy', warehouse: 'role-warehouse' };
 
-  document.getElementById('header-sub').textContent = ${currentUserData.name} — ${currentUserData.dept || ''};
+  document.getElementById('header-sub').textContent = `${currentUserData.name} — ${currentUserData.dept || ''}`;
   const rb = document.getElementById('role-badge');
   rb.textContent = roleLabels[currentUserData.role] || currentUserData.role;
   rb.className = 'role-badge ' + (roleClasses[currentUserData.role] || '');
@@ -512,12 +512,12 @@ window.submitRequest = async function() {
   // notify all warehouse staff
   const warehouseUsers = await getDocs(query(collection(db, 'users'), where('role', '==', 'warehouse')));
   for (const u of warehouseUsers.docs) {
-    await sendNotification(u.data().uid, طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name});
+    await sendNotification(u.data().uid, `طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name}`);
   }
   // notify admins
   const admins = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin')));
   for (const u of admins.docs) {
-    await sendNotification(u.data().uid, طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name});
+    await sendNotification(u.data().uid, `طلب جديد: ${drug} (${qty}) من ${currentUserData.dept || currentUserData.name}`);
   }
 
   document.getElementById('req-drug').value = '';
@@ -595,7 +595,7 @@ function requestCard(id, r, viewAs) {
       <div>
         <div class="request-drug">${r.drug} ${priority}</div>
         <div class="request-meta">الكمية: ${r.qty} | من: ${r.fromDept || r.fromName} | ${date}</div>
-        ${r.note ? <div class="request-meta" style="margin-top:4px">📝 ${r.note}</div> : ''}
+        ${r.note ? `<div class="request-meta" style="margin-top:4px">📝 ${r.note}</div>` : ''}
       </div>
       <span class="badge ${statusClasses[r.status] || ''}">${statusLabels[r.status] || r.status}</span>
     </div>
@@ -606,9 +606,9 @@ function requestCard(id, r, viewAs) {
 window.updateRequest = async function(id, status, fromUid, drug) {
   await updateDoc(doc(db, 'requests', id), { status, updatedAt: serverTimestamp() });
   const msgs = {
-    approved: ✅ تمت الموافقة على طلب: ${drug},
-    rejected: ❌ تم رفض طلب: ${drug},
-    delivered: 📦 تم تسليم: ${drug}
+    approved: `✅ تمت الموافقة على طلب: ${drug}`,
+    rejected: `❌ تم رفض طلب: ${drug}`,
+    delivered: `📦 تم تسليم: ${drug}`
   };
   await sendNotification(fromUid, msgs[status]);
   showMsg('✅ تم تحديث الطلب');
